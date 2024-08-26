@@ -32,38 +32,41 @@ function UserRegistration() {
 
     return (
         <div className="registration-form">
-            <h2>Cadastro de Usuário</h2>
+            <h2 data-test="titulo-registro-usuario">Cadastro de Usuário</h2>
             <form onSubmit={handleSubmit}>
                 <div>
-                    <label>Nome:</label>
+                    <label data-test="nome-label">Nome:</label>
                     <input
                         type="text"
+                        data-test="nome-input"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
                     />
                 </div>
                 <div>
-                    <label>Email:</label>
+                    <label data-test="email-label">Email:</label>
                     <input
                         type="email"
+                        data-test="email-input"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
                     />
                 </div>
                 <div>
-                    <label>Senha:</label>
+                    <label data-test="senha-label">Senha:</label>
                     <input
                         type="password"
+                        data-test="senha-input"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
                 </div>
-                {error && <p className="error-message">{error}</p>}
-                {success && <p className="success-message">{success}</p>}
-                <button type="submit">Cadastrar</button>
+                {error && <p data-test="error-message" className="error-message">{error}</p>}
+                {success && <p data-test="success-message" className="success-message">{success}</p>}
+                <button data-test="cadastrar-button" type="submit">Cadastrar</button>
             </form>
         </div>
     );
