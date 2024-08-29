@@ -1,0 +1,48 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ test/e2e-implementacao ]
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm run test:cypress
+
+  build:
+    needs: testar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm run build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:  ${{ secrets.AWS_REGION }}
+      
+      - name:  Deploy para S3
+        uses: aws-actions/aws-cli@v3
+        with:
+          aws-cli-args: 's3 sync build s3://${{ secrets.S3_BUCKET_NAME }} --delete'
+      
+      - name: Invalidar cache CloudFront
+        uses: aws-actions/aws-cli@v3
+        with:
+          aws-cli-args: 'cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"'
