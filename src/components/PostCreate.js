@@ -27,6 +27,7 @@ function PostCreate() {
 
         try {
             const token = localStorage.getItem('token');
+            console.log({title, content})
             await createPost(title, content, token);
             setSuccessMessage('Postagem criada com sucesso!');
             setTitle('');
@@ -47,6 +48,7 @@ function PostCreate() {
                     <label>Título:</label>
                     <input
                         type="text"
+                        data-test='input-postagemTitulo'
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         required
@@ -56,13 +58,14 @@ function PostCreate() {
                     <label>Conteúdo:</label>
                     <textarea
                         value={content}
+                        data-test='input-postagemConteudo'
                         onChange={(e) => setContent(e.target.value)}
                         required
                     ></textarea>
                 </div>
-                {error && <p className="error-message">{error}</p>}
-                {successMessage && <p className="success-message">{successMessage}</p>}
-                <button type="submit">Criar Postagem</button>
+                {error && <p data-test="postagemMensagemDeErro" className="error-message">{error}</p>}
+                {successMessage && <p data-test="postagemMensagemDeSucesso" className="success-message">{successMessage}</p>}
+                <button data-test='button-submit' type="submit">Criar Postagem</button>
             </form>
         </div>
     );
