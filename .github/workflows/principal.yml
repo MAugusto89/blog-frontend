@@ -3,9 +3,10 @@ name: CI/CD
 on:
   push:
     branches: [ test/e2e-implementacao ]
+  workflow_dispatch: # Permite execução manual do workflow
 
 jobs:
-  testar:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,12 +14,14 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-      - run: npm install
+        env: 
+          REACT_APP_API_BASE_URL: ${{ secrets.REACT_APP_API_BASE_URL }}
+      - run: npm ci # Instala dependências em modo somente leitura
       - run: npm run start &
       - run: npm run test:cypress
 
   build:
-    needs: testar
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,26 +29,51 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-      - run: npm install
-      - run: npm run build
+        env: 
+          REACT_APP_API_BASE_URL: ${{ secrets.REACT_APP_API_BASE_URL }}
+      - run: |
+          npm ci # Instala dependências em modo somente leitura
+          npm run build --if-present
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ github.run_id }}
+          path: build
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region:  ${{ secrets.AWS_REGION }}
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Download build artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: build-${{ github.run_id }}
+  #         path: ./deploy
+        
+  #     - name: Verificar conteúdo do diretório deploy
+  #       run: |
+  #         if [ ! -d "./deploy" ] || [ ! -f "./deploy/index.html" ]; then
+  #           echo "Build artifact is missing or incomplete."
+  #           exit 1
+  #         fi
+     
+  #     - name: Instalar AWS CLI
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y awscli
       
-      - name:  Deploy para S3
-        uses: aws-actions/aws-cli@v3
-        with:
-          aws-cli-args: 's3 sync build s3://${{ secrets.S3_BUCKET_NAME }} --delete'
+  #     - name: Configurar credenciais AWS
+  #       run: |
+  #         aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws configure set region ${{ secrets.AWS_REGION }}
+
+  #     - name: Deploy para S3
+  #       run: |
+  #         aws s3 sync ./deploy/ s3://${{ secrets.S3_BUCKET_NAME }}/ --delete
       
-      - name: Invalidar cache CloudFront
-        uses: aws-actions/aws-cli@v3
-        with:
-          aws-cli-args: 'cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"'
+  #     - name: Invalidar cache CloudFront
+  #       run: |
+  #         aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+
