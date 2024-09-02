@@ -35,6 +35,7 @@ function Login() {
                     <label>Email:</label>
                     <input
                         type="email"
+                        data-test="input-loginEmail"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
@@ -44,6 +45,7 @@ function Login() {
                     <label>Senha:</label>
                     <input
                         type="password"
+                        data-test="input-loginSenha"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -51,7 +53,7 @@ function Login() {
                 </div>
                 {error && <p className="error-message">{error}</p>}
                 {successMessage && <p className="success-message">{successMessage}</p>} {/* Exibir mensagem de sucesso */}
-                <button type="submit">Entrar</button>
+                <button data-test="submit-button" type="submit">Entrar</button>
             </form>
         </div>
     );
